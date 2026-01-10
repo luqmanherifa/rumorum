@@ -1,59 +1,116 @@
 import { useEffect, useState } from "react";
-import { ref, onValue, set, remove } from "firebase/database";
+import { ref, onValue, set } from "firebase/database";
 import { db } from "./lib/firebase";
 
 export default function App() {
-  const { fields, addField, removeField } = useDynamicFields();
-  const [newFieldName, setNewFieldName] = useState("");
+  const [username, setUsername] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleAddField = () => {
-    if (newFieldName.trim()) {
-      addField(newFieldName.trim());
-      setNewFieldName("");
+  const handleLogin = () => {
+    if (username.trim()) {
+      setIsLoggedIn(true);
     }
   };
 
-  return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-      <div className="w-full max-w-xl space-y-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Realtime Chat Room
-        </h1>
+  if (!isLoggedIn) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Chat Room</h1>
+          <p className="text-gray-600 mb-6">Masukkan nama untuk bergabung</p>
 
-        <div className="bg-white p-4 rounded-lg shadow space-y-3">
-          <h2 className="font-medium text-gray-700">Tambah Field Baru</h2>
-          <div className="flex gap-2">
+          <div className="space-y-4">
             <input
               type="text"
-              value={newFieldName}
-              onChange={(e) => setNewFieldName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddField()}
-              className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nama field baru (misal: Field C)"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Nama Anda..."
+              autoFocus
             />
             <button
-              onClick={handleAddField}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              onClick={handleLogin}
+              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
             >
-              Tambah
+              Masuk
             </button>
           </div>
         </div>
+      </main>
+    );
+  }
 
-        <div className="space-y-4">
-          {fields.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              Belum ada field. Tambahkan field baru di atas.
-            </p>
+  return <ChatRoom username={username} />;
+}
+
+function ChatRoom({ username }) {
+  const { allMessages, myMessage, updateMyMessage } = useChatRoom(username);
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="bg-white p-6 rounded-2xl shadow-lg">
+          <h1 className="text-2xl font-bold text-gray-800">Chat Room</h1>
+          <p className="text-gray-600">
+            Logged in as:{" "}
+            <span className="font-semibold text-blue-600">{username}</span>
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg space-y-3">
+          <h2 className="font-semibold text-gray-700">Pesan Anda</h2>
+          <textarea
+            value={myMessage}
+            onChange={(e) => updateMyMessage(e.target.value)}
+            className="w-full h-32 p-4 border-2 border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Ketik pesan Anda di sini..."
+          />
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg space-y-4">
+          <h2 className="font-semibold text-gray-700 text-lg">Semua Pesan</h2>
+
+          {allMessages.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">Belum ada pesan...</p>
           ) : (
-            fields.map((fieldName) => (
-              <RealtimeField
-                key={fieldName}
-                label={fieldName}
-                path={`fields/${fieldName}`}
-                onRemove={() => removeField(fieldName)}
-              />
-            ))
+            <div className="space-y-3">
+              {allMessages.map((msg) => (
+                <div
+                  key={msg.name}
+                  className={`p-4 rounded-lg ${
+                    msg.name === username
+                      ? "bg-blue-50 border-2 border-blue-200"
+                      : "bg-gray-50 border-2 border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        msg.name === username ? "bg-blue-500" : "bg-gray-400"
+                      }`}
+                    />
+                    <span
+                      className={`font-semibold ${
+                        msg.name === username
+                          ? "text-blue-700"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {msg.name}
+                      {msg.name === username && " (Anda)"}
+                    </span>
+                  </div>
+                  <p className="text-gray-800 whitespace-pre-wrap">
+                    {msg.text || (
+                      <span className="text-gray-400 italic">
+                        Belum ada pesan
+                      </span>
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -61,95 +118,43 @@ export default function App() {
   );
 }
 
-function RealtimeField({ label, path, onRemove }) {
-  const { text, updateText } = useRealtimeText(path);
+function useChatRoom(username) {
+  const [allMessages, setAllMessages] = useState([]);
+  const [myMessage, setMyMessage] = useState("");
 
-  return (
-    <div className="bg-white p-4 rounded-lg shadow space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="font-medium text-gray-700">{label}</label>
-        <button
-          onClick={onRemove}
-          className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
-        >
-          Hapus
-        </button>
-      </div>
-      <textarea
-        value={text}
-        onChange={(e) => updateText(e.target.value)}
-        className="w-full h-32 p-3 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder={`Ketik untuk ${label}`}
-      />
-    </div>
-  );
-}
-
-function useDynamicFields() {
-  const [fields, setFields] = useState([]);
   const fieldsRef = ref(db, "fields");
+  const myFieldRef = ref(db, `fields/${username}`);
 
   useEffect(() => {
-    console.log("🔵 Mulai listening ke Firebase...");
-
-    const unsubscribe = onValue(
-      fieldsRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        console.log("🔥 Data dari Firebase:", data);
-
-        if (data) {
-          const fieldNames = Object.keys(data);
-          console.log("✅ Fields ditemukan:", fieldNames);
-          setFields(fieldNames);
-        } else {
-          console.log("⚠️ Tidak ada data di Firebase");
-          setFields([]);
-        }
-      },
-      (error) => {
-        console.error("❌ Error Firebase:", error);
+    const unsubscribe = onValue(fieldsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const messages = Object.keys(data).map((name) => ({
+          name,
+          text: data[name],
+        }));
+        setAllMessages(messages);
+      } else {
+        setAllMessages([]);
       }
-    );
-
-    return () => {
-      console.log("🔴 Berhenti listening");
-      unsubscribe();
-    };
-  }, []);
-
-  const addField = (fieldName) => {
-    console.log("➕ Menambah field:", fieldName);
-    const fieldRef = ref(db, `fields/${fieldName}`);
-    set(fieldRef, "");
-  };
-
-  const removeField = (fieldName) => {
-    console.log("➖ Menghapus field:", fieldName);
-    const fieldRef = ref(db, `fields/${fieldName}`);
-    remove(fieldRef);
-  };
-
-  return { fields, addField, removeField };
-}
-
-function useRealtimeText(path) {
-  const [text, setText] = useState("");
-  const textRef = ref(db, path);
-
-  useEffect(() => {
-    const unsubscribe = onValue(textRef, (snapshot) => {
-      const value = snapshot.val();
-      setText(value || "");
     });
 
     return () => unsubscribe();
-  }, [path]);
+  }, []);
 
-  const updateText = (value) => {
-    setText(value);
-    set(textRef, value);
+  useEffect(() => {
+    const unsubscribe = onValue(myFieldRef, (snapshot) => {
+      const value = snapshot.val();
+      setMyMessage(value || "");
+    });
+
+    return () => unsubscribe();
+  }, [username]);
+
+  const updateMyMessage = (value) => {
+    setMyMessage(value);
+    set(myFieldRef, value);
   };
 
-  return { text, updateText };
+  return { allMessages, myMessage, updateMyMessage };
 }
