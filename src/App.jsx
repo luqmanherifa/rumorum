@@ -9,22 +9,36 @@ export default function App() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
-  const generateRoomCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
   const handleCreateRoom = async () => {
-    if (!roomName.trim() || !username.trim()) {
-      setError("Nama room dan nama Anda harus diisi!");
+    if (!roomName.trim() || !roomCode.trim() || !username.trim()) {
+      setError("Nama room, kode room, dan nama Anda harus diisi!");
       return;
     }
 
-    const code = generateRoomCode();
+    const code = roomCode.trim();
     const roomRef = ref(db, `rooms/${code}/info`);
+
+    const snapshot = await get(roomRef);
+    if (snapshot.exists()) {
+      setError("Kode room sudah digunakan! Gunakan kode lain.");
+      return;
+    }
+
+    const now = new Date();
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: "Asia/Jakarta",
+    };
+    const createdAt = now.toLocaleString("id-ID", options);
 
     await set(roomRef, {
       name: roomName.trim(),
-      createdAt: Date.now(),
+      createdAt: createdAt,
     });
 
     setRoomCode(code);
@@ -37,7 +51,8 @@ export default function App() {
       return;
     }
 
-    const roomRef = ref(db, `rooms/${roomCode.toUpperCase()}/info`);
+    const code = roomCode.trim();
+    const roomRef = ref(db, `rooms/${code}/info`);
     const snapshot = await get(roomRef);
 
     if (!snapshot.exists()) {
@@ -45,7 +60,7 @@ export default function App() {
       return;
     }
 
-    setRoomCode(roomCode.toUpperCase());
+    setRoomCode(code);
     setStep("chat");
   };
 
@@ -119,6 +134,22 @@ export default function App() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Kode Room
+              </label>
+              <input
+                type="text"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="gaming123, belajar, dll"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Buat kode unik untuk room Anda (bebas)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nama Anda
               </label>
               <input
@@ -178,10 +209,9 @@ export default function App() {
               <input
                 type="text"
                 value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-lg tracking-wider"
-                placeholder="ABC123"
-                maxLength={6}
+                onChange={(e) => setRoomCode(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="gaming123, belajar, dll"
               />
             </div>
 
@@ -343,9 +373,21 @@ function useChatRoom(username, roomCode) {
   useEffect(() => {
     const memberRef = ref(db, `rooms/${roomCode}/members/${username}`);
 
+    const now = new Date();
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: "Asia/Jakarta",
+    };
+    const joinedAt = now.toLocaleString("id-ID", options);
+
     set(memberRef, {
       name: username,
-      joinedAt: Date.now(),
+      joinedAt: joinedAt,
     });
 
     set(myFieldRef, "").then(() => {
