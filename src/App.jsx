@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, set, onDisconnect } from "firebase/database";
 import { db } from "./lib/firebase";
 
 export default function App() {
@@ -143,6 +143,10 @@ function useChatRoom(username) {
   }, []);
 
   useEffect(() => {
+    set(myFieldRef, "").then(() => {
+      onDisconnect(myFieldRef).remove();
+    });
+
     const unsubscribe = onValue(myFieldRef, (snapshot) => {
       const value = snapshot.val();
       setMyMessage(value || "");
