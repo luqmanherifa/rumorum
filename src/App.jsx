@@ -1,39 +1,141 @@
 import { useEffect, useState } from "react";
-import { ref, onValue, set, onDisconnect } from "firebase/database";
+import { ref, onValue, set, onDisconnect, get } from "firebase/database";
 import { db } from "./lib/firebase";
 
 export default function App() {
+  const [step, setStep] = useState("select");
+  const [roomCode, setRoomCode] = useState("");
+  const [roomName, setRoomName] = useState("");
   const [username, setUsername] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = () => {
-    if (username.trim()) {
-      setIsLoggedIn(true);
-    }
+  const generateRoomCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  if (!isLoggedIn) {
+  const handleCreateRoom = async () => {
+    if (!roomName.trim() || !username.trim()) {
+      setError("Nama room dan nama Anda harus diisi!");
+      return;
+    }
+
+    const code = generateRoomCode();
+    const roomRef = ref(db, `rooms/${code}/info`);
+
+    await set(roomRef, {
+      name: roomName.trim(),
+      createdAt: Date.now(),
+    });
+
+    setRoomCode(code);
+    setStep("chat");
+  };
+
+  const handleJoinRoom = async () => {
+    if (!roomCode.trim() || !username.trim()) {
+      setError("Kode room dan nama Anda harus diisi!");
+      return;
+    }
+
+    const roomRef = ref(db, `rooms/${roomCode.toUpperCase()}/info`);
+    const snapshot = await get(roomRef);
+
+    if (!snapshot.exists()) {
+      setError("Room tidak ditemukan! Periksa kode room.");
+      return;
+    }
+
+    setRoomCode(roomCode.toUpperCase());
+    setStep("chat");
+  };
+
+  if (step === "select") {
     return (
-      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md space-y-4">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Chat Room</h1>
-          <p className="text-gray-600 mb-6">Masukkan nama untuk bergabung</p>
+          <p className="text-gray-600 mb-6">
+            Pilih untuk membuat atau bergabung ke room
+          </p>
+
+          <button
+            onClick={() => setStep("create")}
+            className="w-full px-6 py-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium text-lg"
+          >
+            🏗️ Buat Room Baru
+          </button>
+
+          <button
+            onClick={() => setStep("join")}
+            className="w-full px-6 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium text-lg"
+          >
+            🚪 Gabung ke Room
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (step === "create") {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+          <button
+            onClick={() => {
+              setStep("select");
+              setError("");
+            }}
+            className="text-gray-600 hover:text-gray-800 mb-4"
+          >
+            ← Kembali
+          </button>
+
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Buat Room Baru
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Isi detail untuk membuat room chat
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
 
           <div className="space-y-4">
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Nama Anda..."
-              autoFocus
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Room
+              </label>
+              <input
+                type="text"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Misal: Room Gaming"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Anda
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Nama Anda..."
+              />
+            </div>
+
             <button
-              onClick={handleLogin}
-              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+              onClick={handleCreateRoom}
+              className="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium"
             >
-              Masuk
+              Buat Room & Masuk
             </button>
           </div>
         </div>
@@ -41,21 +143,106 @@ export default function App() {
     );
   }
 
-  return <ChatRoom username={username} />;
+  if (step === "join") {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+          <button
+            onClick={() => {
+              setStep("select");
+              setError("");
+            }}
+            className="text-gray-600 hover:text-gray-800 mb-4"
+          >
+            ← Kembali
+          </button>
+
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Gabung ke Room
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Masukkan kode room untuk bergabung
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Kode Room
+              </label>
+              <input
+                type="text"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-lg tracking-wider"
+                placeholder="ABC123"
+                maxLength={6}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Anda
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nama Anda..."
+              />
+            </div>
+
+            <button
+              onClick={handleJoinRoom}
+              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+            >
+              Gabung ke Room
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (step === "chat") {
+    return <ChatRoom username={username} roomCode={roomCode} />;
+  }
 }
 
-function ChatRoom({ username }) {
-  const { allMessages, myMessage, updateMyMessage } = useChatRoom(username);
+function ChatRoom({ username, roomCode }) {
+  const { roomInfo, allMessages, myMessage, updateMyMessage } = useChatRoom(
+    username,
+    roomCode
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <h1 className="text-2xl font-bold text-gray-800">Chat Room</h1>
-          <p className="text-gray-600">
-            Logged in as:{" "}
-            <span className="font-semibold text-blue-600">{username}</span>
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">
+                {roomInfo?.name || "Loading..."}
+              </h1>
+              <p className="text-gray-600">
+                Logged in as:{" "}
+                <span className="font-semibold text-blue-600">{username}</span>
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Kode Room:</p>
+              <p className="text-2xl font-mono font-bold text-purple-600">
+                {roomCode}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-lg space-y-3">
@@ -69,7 +256,9 @@ function ChatRoom({ username }) {
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-lg space-y-4">
-          <h2 className="font-semibold text-gray-700 text-lg">Semua Pesan</h2>
+          <h2 className="font-semibold text-gray-700 text-lg">
+            Semua Pesan ({allMessages.length})
+          </h2>
 
           {allMessages.length === 0 ? (
             <p className="text-gray-400 text-center py-8">Belum ada pesan...</p>
@@ -118,12 +307,21 @@ function ChatRoom({ username }) {
   );
 }
 
-function useChatRoom(username) {
+function useChatRoom(username, roomCode) {
+  const [roomInfo, setRoomInfo] = useState(null);
   const [allMessages, setAllMessages] = useState([]);
   const [myMessage, setMyMessage] = useState("");
 
-  const fieldsRef = ref(db, "fields");
-  const myFieldRef = ref(db, `fields/${username}`);
+  const roomInfoRef = ref(db, `rooms/${roomCode}/info`);
+  const fieldsRef = ref(db, `rooms/${roomCode}/fields`);
+  const myFieldRef = ref(db, `rooms/${roomCode}/fields/${username}`);
+
+  useEffect(() => {
+    const unsubscribe = onValue(roomInfoRef, (snapshot) => {
+      setRoomInfo(snapshot.val());
+    });
+    return () => unsubscribe();
+  }, [roomCode]);
 
   useEffect(() => {
     const unsubscribe = onValue(fieldsRef, (snapshot) => {
@@ -140,11 +338,14 @@ function useChatRoom(username) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [roomCode]);
 
   useEffect(() => {
     set(myFieldRef, "").then(() => {
       onDisconnect(myFieldRef).remove();
+      console.log(
+        `✅ Auto-delete diatur untuk ${username} di room ${roomCode}`
+      );
     });
 
     const unsubscribe = onValue(myFieldRef, (snapshot) => {
@@ -153,12 +354,12 @@ function useChatRoom(username) {
     });
 
     return () => unsubscribe();
-  }, [username]);
+  }, [username, roomCode]);
 
   const updateMyMessage = (value) => {
     setMyMessage(value);
     set(myFieldRef, value);
   };
 
-  return { allMessages, myMessage, updateMyMessage };
+  return { roomInfo, allMessages, myMessage, updateMyMessage };
 }
