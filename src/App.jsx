@@ -99,13 +99,19 @@ export default function App() {
   if (step === "select") {
     return (
       <main>
-        <div>
-          <h1>Chat Room</h1>
-          <p>Pilih untuk membuat atau bergabung ke room</p>
+        <div className="container">
+          <div className="card">
+            <h1>Chat Room</h1>
+            <p>Pilih untuk membuat atau bergabung ke room</p>
 
-          <button onClick={() => setStep("create")}>🏗️ Buat Room Baru</button>
+            <button className="btn-primary" onClick={() => setStep("create")}>
+              🏗️ Buat Room Baru
+            </button>
 
-          <button onClick={() => setStep("join")}>🚪 Gabung ke Room</button>
+            <button className="btn-secondary" onClick={() => setStep("join")}>
+              🚪 Gabung ke Room
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -114,22 +120,23 @@ export default function App() {
   if (step === "create") {
     return (
       <main>
-        <div>
-          <button
-            onClick={() => {
-              setStep("select");
-              setError("");
-            }}
-          >
-            ← Kembali
-          </button>
+        <div className="container">
+          <div className="card">
+            <button
+              className="btn-back"
+              onClick={() => {
+                setStep("select");
+                setError("");
+              }}
+            >
+              ← Kembali
+            </button>
 
-          <h1>Buat Room Baru</h1>
-          <p>Isi detail untuk membuat room chat</p>
+            <h1>Buat Room Baru</h1>
+            <p>Isi detail untuk membuat room chat</p>
 
-          {error && <div>{error}</div>}
+            {error && <div className="error">{error}</div>}
 
-          <div>
             <div>
               <label>Nama Room</label>
               <input
@@ -138,9 +145,7 @@ export default function App() {
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Misal: Room Gaming"
               />
-            </div>
 
-            <div>
               <label>Kode Room</label>
               <input
                 type="text"
@@ -148,10 +153,10 @@ export default function App() {
                 onChange={(e) => setRoomCode(e.target.value)}
                 placeholder="gaming123, belajar, dll"
               />
-              <p>Buat kode unik untuk room Anda (bebas)</p>
-            </div>
+              <p className="text-small">
+                Buat kode unik untuk room Anda (bebas)
+              </p>
 
-            <div>
               <label>Nama Anda</label>
               <input
                 type="text"
@@ -160,9 +165,11 @@ export default function App() {
                 onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
                 placeholder="Nama Anda..."
               />
-            </div>
 
-            <button onClick={handleCreateRoom}>Buat Room & Masuk</button>
+              <button className="btn-primary" onClick={handleCreateRoom}>
+                Buat Room & Masuk
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -172,22 +179,23 @@ export default function App() {
   if (step === "join") {
     return (
       <main>
-        <div>
-          <button
-            onClick={() => {
-              setStep("select");
-              setError("");
-            }}
-          >
-            ← Kembali
-          </button>
+        <div className="container">
+          <div className="card">
+            <button
+              className="btn-back"
+              onClick={() => {
+                setStep("select");
+                setError("");
+              }}
+            >
+              ← Kembali
+            </button>
 
-          <h1>Gabung ke Room</h1>
-          <p>Masukkan kode room untuk bergabung</p>
+            <h1>Gabung ke Room</h1>
+            <p>Masukkan kode room untuk bergabung</p>
 
-          {error && <div>{error}</div>}
+            {error && <div className="error">{error}</div>}
 
-          <div>
             <div>
               <label>Kode Room</label>
               <input
@@ -196,9 +204,7 @@ export default function App() {
                 onChange={(e) => setRoomCode(e.target.value)}
                 placeholder="gaming123, belajar, dll"
               />
-            </div>
 
-            <div>
               <label>Nama Anda</label>
               <input
                 type="text"
@@ -207,9 +213,11 @@ export default function App() {
                 onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
                 placeholder="Nama Anda..."
               />
-            </div>
 
-            <button onClick={handleJoinRoom}>Gabung ke Room</button>
+              <button className="btn-primary" onClick={handleJoinRoom}>
+                Gabung ke Room
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -229,26 +237,26 @@ function ChatRoom({ username, roomCode }) {
 
   return (
     <main>
-      <div>
-        <div>
-          <div>
+      <div className="container">
+        <div className="card">
+          <div className="flex-between">
             <div>
               <h1>{roomInfo?.name || "Loading..."}</h1>
               <p>
-                Logged in as: <span>{username}</span>
+                Logged in as: <span className="username">{username}</span>
               </p>
             </div>
             <div>
-              <p>Kode Room:</p>
-              <p>{roomCode}</p>
+              <p className="text-small">Kode Room:</p>
+              <p className="room-code">{roomCode}</p>
             </div>
           </div>
         </div>
 
-        <div>
-          <div>
+        <div className="card">
+          <div className="flex-between">
             <h2>Pesan Anda</h2>
-            <span>Tekan Enter untuk hapus pesan</span>
+            <span className="text-small">Tekan Enter untuk hapus</span>
           </div>
           <textarea
             value={myMessage}
@@ -263,23 +271,34 @@ function ChatRoom({ username, roomCode }) {
           />
         </div>
 
-        <div>
+        <div className="card">
           <h2>Semua Pesan ({allMessages.length})</h2>
 
           {allMessages.length === 0 ? (
-            <p>Belum ada pesan...</p>
+            <p className="empty-state">Belum ada pesan...</p>
           ) : (
             <div>
               {allMessages.map((msg) => (
-                <div key={msg.name}>
-                  <div>
-                    <div />
-                    <span>
+                <div
+                  key={msg.name}
+                  className={`message-box ${
+                    msg.name === username ? "own" : ""
+                  }`}
+                >
+                  <div className="message-header">
+                    <div
+                      className={`dot ${msg.name === username ? "own" : ""}`}
+                    />
+                    <span className="username">
                       {msg.name}
                       {msg.name === username && " (Anda)"}
                     </span>
                   </div>
-                  <p>{msg.text || <span>Belum ada pesan</span>}</p>
+                  <p>
+                    {msg.text || (
+                      <span className="text-small">Belum ada pesan</span>
+                    )}
+                  </p>
                 </div>
               ))}
             </div>
