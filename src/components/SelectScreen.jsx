@@ -51,12 +51,22 @@ export default function SelectScreen({ onCreateClick, onJoinClick }) {
           <div className="mb-2 flex justify-center">
             <motion.div
               animate={{
-                y: [0, -8, 0],
+                y: [-8, 8],
+                rotate: [-5, 5],
               }}
               transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
+                y: {
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  ease: "easeInOut",
+                },
+                rotate: {
+                  duration: 2.5,
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  ease: "easeInOut",
+                },
               }}
             >
               <RumorumLogoIcon className="w-16 h-16 fill-rumor" />
@@ -85,10 +95,7 @@ export default function SelectScreen({ onCreateClick, onJoinClick }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-            whileTap={{
-              scale: 0.98,
-              transition: { type: "spring", stiffness: 300 },
-            }}
+            whileTap={{ scale: 0.98 }}
             onClick={onCreateClick}
             className="h-16 rounded-2xl bg-whisper text-base font-bold uppercase tracking-wide text-white flex items-center justify-center gap-2.5"
           >
@@ -100,10 +107,7 @@ export default function SelectScreen({ onCreateClick, onJoinClick }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-            whileTap={{
-              scale: 0.98,
-              transition: { type: "spring", stiffness: 300 },
-            }}
+            whileTap={{ scale: 0.98 }}
             onClick={onJoinClick}
             className="h-16 rounded-2xl bg-echo text-base font-bold uppercase tracking-wide text-white flex items-center justify-center gap-2.5"
           >

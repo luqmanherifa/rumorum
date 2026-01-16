@@ -117,15 +117,17 @@ export default function CreateRoomScreen({
         </div>
 
         {/* Submit */}
-        <button
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+          whileTap={{ scale: 0.98 }}
           onClick={onSubmit}
-          className="mt-6 h-14 rounded-2xl bg-whisper text-base font-bold uppercase tracking-wide text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-14 rounded-2xl bg-whisper text-sm font-bold uppercase tracking-wide text-white flex items-center justify-center gap-2.5"
         >
-          <span className="flex items-center justify-center gap-2.5">
-            <SparklesIcon className="w-5 h-5 fill-white" />
-            Buat Room
-          </span>
-        </button>
+          <SparklesIcon className="w-5 h-5 fill-white" />
+          Buat Room
+        </motion.button>
       </div>
     </main>
   );
