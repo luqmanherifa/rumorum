@@ -110,8 +110,8 @@ export default function ChatRoom({ username, roomCode }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-full border border-blue-200 flex-shrink-0">
-                <PeopleIcon className="w-3.5 h-3.5 fill-blue-500" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-pink-50 rounded-full border border-pink-200 flex-shrink-0">
+                <PeopleIcon className="w-3.5 h-3.5 fill-echo" />
                 <span className="text-sm font-bold text-slate-800">
                   {otherBubbles.length + 1}
                 </span>
@@ -128,7 +128,7 @@ export default function ChatRoom({ username, roomCode }) {
             animate={{ scale: 1, opacity: 1 }}
             className="sticky top-0 z-10"
           >
-            <div className="bg-white rounded-xl border-2 border-whisper/30 p-2.5 pb-2">
+            <div className="bg-white rounded-xl border border-whisper p-2.5 pb-2">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <div
@@ -173,7 +173,7 @@ export default function ChatRoom({ username, roomCode }) {
                 }}
                 placeholder="Ketik sesuatu..."
                 rows={1}
-                className="w-full resize-none bg-slate-50 text-slate-800 placeholder:text-slate-400 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none focus:bg-slate-100 transition-colors border border-slate-200 focus:border-whisper"
+                className="w-full resize-none bg-slate-50 text-slate-800 placeholder:text-slate-400 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none focus:bg-slate-50 transition-colors border border-slate-200 focus:border-whisper"
               />
             </div>
           </motion.div>
