@@ -43,7 +43,7 @@ export default function CreateRoomScreen({
             Buat Room Baru
           </h1>
           <p className="text-sm text-slate-500 font-medium">
-            Lengkapi informasi untuk membuat room chat
+            Buat ruangmu sendiri.
           </p>
         </motion.div>
 
@@ -93,7 +93,7 @@ export default function CreateRoomScreen({
               placeholder="Kode room kamu"
             />
             <p className="mt-2 text-xs text-slate-500 font-medium">
-              Kode ini dipakai untuk masuk room
+              Buat kode untuk room ini
             </p>
           </motion.div>
 

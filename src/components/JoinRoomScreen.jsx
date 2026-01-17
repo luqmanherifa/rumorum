@@ -41,7 +41,7 @@ export default function JoinRoomScreen({
             Gabung ke Room
           </h1>
           <p className="text-sm text-slate-500 font-medium">
-            Masukkan kode room untuk bergabung
+            Masuk ke room temanmu.
           </p>
         </motion.div>
 
